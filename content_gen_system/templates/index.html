@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI-Based Content Generation System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI-Based Content Generation System</h1>
+            <p class="subtitle">Generate original blog posts, social captions, product blurbs, and articles instantly.</p>
+        </header>
+
+        <form id="generate-form">
+            <div class="field">
+                <label for="topic">Topic</label>
+                <select id="topic" name="topic">
+                    {% for topic in topics %}
+                        <option value="{{ topic }}">{{ topic.title() }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="content_type">Content Type</label>
+                <select id="content_type" name="content_type">
+                    <option value="article">Article</option>
+                    <option value="blog">Blog Post</option>
+                    <option value="social">Social Media Caption</option>
+                    <option value="product">Product Description</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="length">Length</label>
+                <select id="length" name="length">
+                    <option value="short">Short</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="long">Long</option>
+                </select>
+            </div>
+
+            <button type="submit">Generate Content</button>
+        </form>
+
+        <section id="output-section" class="hidden">
+            <h2>Generated Content</h2>
+            <pre id="output"></pre>
+            <button id="copy-btn" type="button">Copy to Clipboard</button>
+        </section>
+    </div>
+
+    <script>
+        const form = document.getElementById('generate-form');
+        const outputSection = document.getElementById('output-section');
+        const output = document.getElementById('output');
+        const copyBtn = document.getElementById('copy-btn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                topic: document.getElementById('topic').value,
+                content_type: document.getElementById('content_type').value,
+                length: document.getElementById('length').value,
+            };
+
+            output.textContent = 'Generating...';
+            outputSection.classList.remove('hidden');
+
+            try {
+                const res = await fetch('/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    output.textContent = data.content;
+                } else {
+                    output.textContent = 'Error: ' + data.error;
+                }
+            } catch (err) {
+                output.textContent = 'Request failed: ' + err.message;
+            }
+        });
+
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(output.textContent);
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => (copyBtn.textContent = 'Copy to Clipboard'), 1500);
+        });
+    </script>
+</body>
+</html>
